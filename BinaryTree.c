@@ -231,7 +231,19 @@ int printAncestors(TreeNode* root, int target){
     return 0;
 }
 
+int isSame(TreeNode* root1, TreeNode* root2){
+    if(root1==NULL&&root2==NULL) return 1;
+    if(root1==NULL||root2==NULL)return 0;
+    if(root1->treedata!=root2->treedata)return 0;
+    return isSame(root1->left,root2->left)&&isSame(root1->right,root2->right);
+}
 
+int isMirror(TreeNode* root1, TreeNode* root2){
+    if(root1==NULL&&root2==NULL)return 1;
+    if(root1==NULL||root2==NULL)return 0;
+    if(root1->treedata!=root2->treedata)return 0;
+    return isMirror(root1->left,root2->right)&&isMirror(root1->right,root2->left);
+}
 
 int main(){
     TreeNode* root = createBinaryTree(NULL);
@@ -264,5 +276,9 @@ int main(){
     printf("Print ancestors: ");
     printAncestors(root,7);
     printf("\n");
+    printf("Create another tree:\n");
+    TreeNode* root2 = createBinaryTree(NULL);
+    printf("Is Same: %d\n",isSame(root,root2));
+    printf("Is mirror: %d\n",isMirror(root,root2));
     return 0;
 }
