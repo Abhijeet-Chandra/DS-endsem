@@ -474,7 +474,7 @@ int main(){
     printf("\n");
     printf("Max in BST: %d\n",findMax(bstroot));
     printf("Min in BST: %d\n",findMin(bstroot));
-    deleteNodeBST(bstroot,6);
+    root = deleteNodeBST(bstroot,6);
     printf("Inorder after deletion: ");
     recursiveInorder(bstroot);
     printf("\n");
