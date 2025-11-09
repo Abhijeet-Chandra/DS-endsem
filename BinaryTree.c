@@ -4,6 +4,7 @@
 
 typedef struct TreeNode{
     int treedata;
+    int height;
     struct TreeNode* left;
     struct TreeNode* right;
 }TreeNode;
@@ -12,6 +13,7 @@ typedef struct TreeNode{
 TreeNode* createTreeNode(int data){
     TreeNode* newNode = (TreeNode*)malloc(sizeof(TreeNode));
     newNode->treedata = data;
+    newNode->height = 1;
     newNode->left = newNode->right = NULL;
     return newNode;
 }
@@ -245,6 +247,177 @@ int isMirror(TreeNode* root1, TreeNode* root2){
     return isMirror(root1->left,root2->right)&&isMirror(root1->right,root2->left);
 }
 
+TreeNode* createBST(TreeNode* root, int data){
+
+    if(root==NULL){
+        TreeNode* newNode = createTreeNode(data);
+        return newNode;
+    }
+
+    if(data<root->treedata)
+        root->left = createBST(root->left,data);
+    if(data>root->treedata)
+        root->right = createBST(root->right,data);
+
+    return root;
+}
+
+int searchBST(TreeNode* root, int target){
+    if(root==NULL)return 0;
+    if(root->treedata == target) return 1;
+    if(target<root->treedata) return searchBST(root->left,target);
+    if(target>root->treedata) return searchBST(root->right,target);
+    return 0;
+}
+
+int findMin(TreeNode* root){
+    TreeNode* temp = root;
+    while(temp->left!=NULL){
+        temp = temp->left;
+    }
+    return temp->treedata;
+}
+
+int findMax(TreeNode* root){
+    
+    TreeNode* temp = root;
+    while(temp->right!=NULL){
+        temp = temp->right;
+    }
+    return temp->treedata;
+}
+
+TreeNode* deleteNodeBST(TreeNode* root, int target){
+    if(root==NULL)return NULL;
+    if(root->treedata==target){
+        if(root->left==NULL&&root->right==NULL){
+            free(root);
+            return NULL;
+        }
+        if(root->left!=NULL&&root->right==NULL){
+            TreeNode* temp = root->left;
+            free(root);
+            return temp;
+        }
+        if(root->right!=NULL&&root->left==NULL){
+            TreeNode* temp = root->right;
+            free(root);
+            return temp;
+        }
+        if(root->left!=NULL&&root->right!=NULL){
+            int min = findMin(root->right);
+            root->treedata = min;
+            root->right = deleteNodeBST(root->right,min);
+            return root;
+        }
+    }
+    else if(target<root->treedata){
+        root->left = deleteNodeBST(root->left,target);
+    }
+    else if(target>root->treedata){
+        root->right = deleteNodeBST(root->right,target);
+    }
+    return root;
+}
+
+int heightAVL(TreeNode* root){
+    if(root==NULL)return 0;
+    return root->height;
+}
+
+int balance(TreeNode* root){
+    if(root==NULL)return 0;
+    return heightAVL(root->left)-heightAVL(root->right);
+}
+
+TreeNode* rotateLeft(TreeNode* root){
+    TreeNode* child = root->right;
+    TreeNode* leftChild = child->left;
+    child->left = root;
+    root->right = leftChild;
+    root->height = 1+MAX(heightAVL(root->left),heightAVL(root->right));
+    child->height = 1+MAX(heightAVL(child->left),heightAVL(child->right));
+    return child;
+}
+
+TreeNode* rotateRight(TreeNode* root){
+    TreeNode* child = root->left;
+    TreeNode* rightChild = child->right;
+    child->right = root;
+    root->left = rightChild;
+    root->height = 1+MAX(heightAVL(root->left),heightAVL(root->right));
+    child->height = 1+MAX(heightAVL(child->left),heightAVL(child->right));
+    return child;
+}
+
+TreeNode* createAVL(TreeNode* root,int data){
+    if(root==NULL){
+        TreeNode* newNode = createTreeNode(data);
+        return newNode;
+    }
+
+    if(data<root->treedata) root->left = createAVL(root->left,data);
+    else if(data>root->treedata) root->right = createAVL(root->right,data);
+    else return root;
+
+    root->height = 1+MAX(heightAVL(root->left),heightAVL(root->right));
+    int bal = balance(root);
+
+    //LL case
+    if(bal>1&&data<root->left->treedata){
+        return rotateRight(root);
+    }
+
+    //RR case
+    if(bal<-1&&data>root->right->treedata){
+        return rotateLeft(root);
+    }
+
+    //LR case
+    if(bal>1&&data>root->left->treedata){
+        root->left = rotateLeft(root->left);
+        return rotateRight(root);
+    }
+
+    //RL case
+    if(bal<-1&&data<root->right->treedata){
+        root->right = rotateRight(root->right);
+        return rotateLeft(root);
+    }
+    return root;
+}
+
+typedef struct Node
+{
+    int data;
+    struct Node* next;
+    struct Node* prev;
+}Node;
+
+Node* createNode(int data){
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = data;
+    newNode->next = newNode->prev = NULL;
+    return newNode;
+}
+
+Node* head = NULL, *tail = NULL;
+
+void BSTtoDLL(TreeNode* root){
+    if(root==NULL)return;
+    BSTtoDLL(root->left);
+    Node* newNode = createNode(root->treedata);
+    if(head==NULL){
+        head = tail = newNode;
+    }
+    else{
+        tail->next = newNode;
+        newNode->prev = tail;
+        tail = tail->next;
+    }
+    BSTtoDLL(root->right);
+}
+
 int main(){
     TreeNode* root = createBinaryTree(NULL);
     printf("Recursive preorder: ");
@@ -280,5 +453,56 @@ int main(){
     TreeNode* root2 = createBinaryTree(NULL);
     printf("Is Same: %d\n",isSame(root,root2));
     printf("Is mirror: %d\n",isMirror(root,root2));
+
+    printf("BST creation: \n");
+    TreeNode* bstroot = NULL;
+    int data;
+    for(int i = 0; i<8; i++){
+        printf("Enter data: ");
+        scanf("%d",&data);
+        bstroot = createBST(bstroot,data);
+    }
+    
+    printf("Preorder: ");
+    recursivePreorder(bstroot);
+    printf("\n");
+    printf("Inorder: ");
+    recursiveInorder(bstroot);
+    printf("\n");
+    printf("Postorder: ");
+    recursivePostorder(bstroot);
+    printf("\n");
+    printf("Max in BST: %d\n",findMax(bstroot));
+    printf("Min in BST: %d\n",findMin(bstroot));
+    deleteNodeBST(bstroot,6);
+    printf("Inorder after deletion: ");
+    recursiveInorder(bstroot);
+    printf("\n");
+    printf("AVL creation: \n");
+    TreeNode* avlroot = NULL;
+    for(int i = 0; i<8; i++){
+        printf("Enter data: ");
+        scanf("%d",&data);
+        avlroot = createAVL(avlroot,data);
+    }
+
+    printf("Preorder: ");
+    recursivePreorder(avlroot);
+    printf("\n");
+    printf("Inorder: ");
+    recursiveInorder(avlroot);
+    printf("\n");
+    printf("Postorder: ");
+    recursivePostorder(avlroot);
+    printf("\n");   
+
+    printf("BST to DLL: \n");
+    
+    BSTtoDLL(bstroot);
+    Node* temp = head;
+    while(temp!=NULL){
+        printf("%d<=>",temp->data);
+        temp = temp->next;
+    }
     return 0;
 }
